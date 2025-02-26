@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viaje a la Revolución Industrial</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- Estilos Generales --- */
+        *, *::before, *::after { /* Selector universal más preciso */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif; /* Tipografía moderna */
+            background: #f8f5f1; /* Fondo más claro */
+            color: #444; /* Color de texto principal */
+            line-height: 1.7; /* Interlineado */
+            overflow-x: hidden;
+        }
+
+        /* --- Header --- */
+        .header {
+            background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco semitransparente */
+            padding: 1rem 0; /* Espaciado más generoso */
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+            backdrop-filter: blur(10px); /* Efecto de desenfoque (opcional) */
+        }
+
+        .header h1 {
+            font-size: 1.8rem; /* Título del header más grande */
+            margin: 0;
+            color: #a87531;/* Color dorado/cobrizo para el título */
+            font-family: 'Roboto Slab', serif; /* Fuente serif para el título */
+            font-weight: 700;
+        }
+
+        /* --- Secciones (Contenedores Principales) --- */
+        .section {
+            min-height: 100vh;
+            padding: 6rem 2rem; /* Padding más consistente */
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .section:nth-child(even) { /* Alternar colores de fondo */
+            background-color: #f4f0ec;
+          }
+
+        .section h2 {
+            font-size: 3rem; /* Títulos de sección más grandes */
+            margin-bottom: 1.5rem;
+            color: #a87531; /* Dorado/cobrizo para títulos */
+            font-family: 'Roboto Slab', serif;
+            font-weight: 700;
+            position: relative; /* Para el subrayado animado */
+            display: inline-block; /* Para que el subrayado se ajuste al texto */
+
+        }
+
+        .section h2::after { /* Subrayado animado */
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -5px;
+            width: 100%;
+            height: 3px;
+            background-color: #a87531; /* Dorado/cobrizo */
+            transform: scaleX(0);  /* Inicialmente oculto */
+            transform-origin: left; /* Crece desde la izquierda */
+            transition: transform 0.4s ease-out;
+        }
+
+          .section h2.is-visible::after {
+            transform: scaleX(1); /* Se muestra al entrar en el viewport */
+        }
+
+        .title {
+            font-size: 4.5rem; /* Título principal aún más grande */
+            margin-bottom: 1rem;
+            color: #a87531; /* Dorado/cobrizo */
+            font-family: 'Roboto Slab', serif;
+            font-weight: 700;
+            line-height: 1.2; /* Interlineado más ajustado para el título */
+        }
+
+        /* --- Contenedor de Texto --- */
+        .text-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: left; /* Alineación a la izquierda para el texto */
+        }
+        .text-container p{
+             margin-bottom: 1em;
+        }
+
+        /* --- Imágenes y Máquinas --- */
+          .machine-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center; /* Centra las imágenes horizontalmente */
+            gap: 2rem; /* Espacio más grande entre las imágenes */
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem; /* Padding en los lados */
+        }
+        .machine {
+            flex: 0 1 300px; /* Base de 300px, crece y se encoge según sea necesario */
+            max-width: 350px; /* Limita el crecimiento */
+            border: none; /* Quitamos el borde */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra más sutil */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden; /*Oculta las partes de la imagen*/
+            border-radius: 8px; /*Bordes redondeados*/
+        }
+
+        .machine:hover {
+            transform: translateY(-10px); /* Elevación más pronunciada */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+          .machine img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            object-position: center;
+            display: block; /* Elimina el espacio extra debajo de la imagen */
+            border-radius: 8px; /*Bordes redondeados*/
+
+        }
+
+        /* --- Mapa --- */
+        #map {
+            width: 90%;
+            max-width: 900px;
+            height: 500px;
+            border: none; /* Sin borde */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin: 30px auto;
+            border-radius: 10px; /* Bordes redondeados */
+            overflow: hidden;
+        }
+        /* --- Estilos para los botones del mapa ---*/
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip{
+            background-color: #f8f5f1; /*Mismo color de fondo*/
+            color: #444;
+            border-radius: 8px;
+        }
+
+        /* --- Gráfico --- */
+        .graph-container {
+            width: 90%;
+            max-width: 900px;
+            height: 400px;
+            background: #fff;
+            position: relative;
+            overflow: hidden;
+            margin: 30px auto;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+             border-radius: 10px; /* Bordes redondeados */
+        }
+
+        .graph-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background-color: #c0392b;
+            transition: width 0.5s ease;
+        }
+
+        .graph-bar-label {
+           position: absolute;
+            bottom: 10px; /*Sube un poco mas*/
+            left: 10px;
+            color: white;
+            font-size: 1rem;
+            z-index: 2;
+            font-weight: bold;
+        }
+
+        .graph-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url("https://via.placeholder.com/900x400?text=Grafica+Antigua")
+              no-repeat center;
+            background-size: contain;
+            opacity: 0.1; /* Más transparente */
+        }
+
+        /* --- Figuras Clave --- */
+        #figures-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 3rem;
+             padding: 0 1rem; /* Padding en los lados */
+        }
+
+        .figure-card {
+           flex: 0 1 250px; /* Base de 250px */
+            max-width: 300px;
+            padding: 1.5rem; /* Más padding */
+            border: none; /* Quitamos el borde */
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+         .figure-card:hover {
+            transform: translateY(-8px); /* Elevación sutil */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .figure-card img {
+            width: 100%;
+            height: 180px;  /*Aumentar altura*/
+            object-fit: cover;
+            object-position: center;
+            border-radius: 8px; /* Bordes redondeados */
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .figure-card h3 {
+            font-size: 1.5rem;
+            color: #a87531; /* Dorado/cobrizo */
+            margin-bottom: 0.5rem;
+            font-family: 'Roboto Slab', serif;
+            font-weight: 700;
+        }
+        .figure-card p{
+            text-align: left; /*Alineacion a la izquierda*/
+        }
+
+        /* --- Responsive Design (Media Queries) --- */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .section {
+                padding: 4rem 1rem; /* Menos padding en pantallas pequeñas */
+            }
+
+            .section h2 {
+                font-size: 2.2rem;
+            }
+
+            .title {
+                font-size: 3rem;
+            }
+
+            .machine-container {
+                flex-direction: column; /* Apila las máquinas verticalmente */
+                align-items: center; /* Centra las máquinas */
+            }
+              .machine {
+                flex: 0 1 100%; /* Ocupa todo el ancho */
+                max-width: 350px; /* Ancho máximo */
+            }
+
+            #map, .graph-container {
+                height: 300px;
+            }
+            #figures-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .figure-card{
+                 flex: 0 1 100%; /* Ocupa todo el ancho */
+                max-width: 350px; /* Ancho máximo */
+            }
+        }
+/* From Uiverse.io by JkHuger */ 
+@keyframes snow {
+  0% {
+    opacity: 0;
+    transform: translateY(0px);
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(650px);
+  }
+}
+
+@keyframes astronaut {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.box-of-star1,
+.box-of-star2,
+.box-of-star3,
+.box-of-star4 {
+  width: 100%;
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  top: 0;
+  transform: translateY(0px);
+  height: 700px;
+}
+
+.box-of-star1 {
+  animation: snow 5s linear infinite;
+}
+
+.box-of-star2 {
+  animation: snow 5s -1.64s linear infinite;
+}
+
+.box-of-star3 {
+  animation: snow 5s -2.30s linear infinite;
+}
+
+.box-of-star4 {
+  animation: snow 5s -3.30s linear infinite;
+}
+
+.star {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: #FFF;
+  position: absolute;
+  z-index: 10;
+  opacity: 0.7;
+}
+
+.star:before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #FFF;
+  position: absolute;
+  z-index: 10;
+  top: 80px;
+  left: 70px;
+  opacity: .7;
+}
+
+.star:after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #FFF;
+  position: absolute;
+  z-index: 10;
+  top: 8px;
+  left: 170px;
+  opacity: .9;
+}
+
+.star-position1 {
+  top: 30px;
+  left: 20px;
+}
+
+.star-position2 {
+  top: 110px;
+  left: 250px;
+}
+
+.star-position3 {
+  top: 60px;
+  left: 570px;
+}
+
+.star-position4 {
+  top: 120px;
+  left: 900px;
+}
+
+.star-position5 {
+  top: 20px;
+  left: 1120px;
+}
+
+.star-position6 {
+  top: 90px;
+  left: 1280px;
+}
+
+.star-position7 {
+  top: 30px;
+  left: 1480px;
+}
+
+.astronaut {
+  width: 250px;
+  height: 300px;
+  position: absolute;
+  z-index: 11;
+  top: calc(50% - 150px);
+  left: calc(50% - 125px);
+  animation: astronaut 5s linear infinite;
+}
+
+.schoolbag {
+  width: 100px;
+  height: 150px;
+  position: absolute;
+  z-index: 1;
+  top: calc(50% - 75px);
+  left: calc(50% - 50px);
+  background-color: #94b7ca;
+  border-radius: 50px 50px 0 0 / 30px 30px 0 0;
+}
+
+.head {
+  width: 97px;
+  height: 80px;
+  position: absolute;
+  z-index: 3;
+  background: -webkit-linear-gradient(left, #e3e8eb 0%, #e3e8eb 50%, #fbfdfa 50%, #fbfdfa 100%);
+  border-radius: 50%;
+  top: 34px;
+  left: calc(50% - 47.5px);
+}
+
+.head:after {
+  content: "";
+  width: 60px;
+  height: 50px;
+  position: absolute;
+  top: calc(50% - 25px);
+  left: calc(50% - 30px);
+  background: -webkit-linear-gradient(top, #15aece 0%, #15aece 50%, #0391bf 50%, #0391bf 100%);
+  border-radius: 15px;
+}
+
+.head:before {
+  content: "";
+  width: 12px;
+  height: 25px;
+  position: absolute;
+  top: calc(50% - 12.5px);
+  left: -4px;
+  background-color: #618095;
+  border-radius: 5px;
+  box-shadow: 92px 0px 0px #618095;
+}
+
+.body {
+  width: 85px;
+  height: 100px;
+  position: absolute;
+  z-index: 2;
+  background-color: #fffbff;
+  border-radius: 40px / 20px;
+  top: 105px;
+  left: calc(50% - 41px);
+  background: -webkit-linear-gradient(left, #e3e8eb 0%, #e3e8eb 50%, #fbfdfa 50%, #fbfdfa 100%);
+}
+
+.panel {
+  width: 60px;
+  height: 40px;
+  position: absolute;
+  top: 20px;
+  left: calc(50% - 30px);
+  background-color: #b7cceb;
+}
+
+.panel:before {
+  content: "";
+  width: 30px;
+  height: 5px;
+  position: absolute;
+  top: 9px;
+  left: 7px;
+  background-color: #fbfdfa;
+  box-shadow: 0px 9px 0px #fbfdfa, 0px 18px 0px #fbfdfa;
+}
+
+.panel:after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  position: absolute;
+  top: 9px;
+  right: 7px;
+  background-color: #fbfdfa;
+  border-radius: 50%;
+  box-shadow: 0px 14px 0px 2px #fbfdfa;
+}
+
+.arm {
+  width: 80px;
+  height: 30px;
+  position: absolute;
+  top: 121px;
+  z-index: 2;
+}
+
+.arm-left {
+  left: 30px;
+  background-color: #e3e8eb;
+  border-radius: 0 0 0 39px;
+}
+
+.arm-right {
+  right: 30px;
+  background-color: #fbfdfa;
+  border-radius: 0 0 39px 0;
+}
+
+.arm-left:before,
+.arm-right:before {
+  content: "";
+  width: 30px;
+  height: 70px;
+  position: absolute;
+  top: -40px;
+}
+
+.arm-left:before {
+  border-radius: 50px 50px 0px 120px / 50px 50px 0 110px;
+  left: 0;
+  background-color: #e3e8eb;
+}
+
+.arm-right:before {
+  border-radius: 50px 50px 120px 0 / 50px 50px 110px 0;
+  right: 0;
+  background-color: #fbfdfa;
+}
+
+.arm-left:after,
+.arm-right:after {
+  content: "";
+  width: 30px;
+  height: 10px;
+  position: absolute;
+  top: -24px;
+}
+
+.arm-left:after {
+  background-color: #6e91a4;
+  left: 0;
+}
+
+.arm-right:after {
+  right: 0;
+  background-color: #b6d2e0;
+}
+
+.leg {
+  width: 30px;
+  height: 40px;
+  position: absolute;
+  z-index: 2;
+  bottom: 70px;
+}
+
+.leg-left {
+  left: 76px;
+  background-color: #e3e8eb;
+  transform: rotate(20deg);
+}
+
+.leg-right {
+  right: 73px;
+  background-color: #fbfdfa;
+  transform: rotate(-20deg);
+}
+
+.leg-left:before,
+.leg-right:before {
+  content: "";
+  width: 50px;
+  height: 25px;
+  position: absolute;
+  bottom: -26px;
+}
+
+.leg-left:before {
+  left: -20px;
+  background-color: #e3e8eb;
+  border-radius: 30px 0 0 0;
+  border-bottom: 10px solid #6d96ac;
+}
+
+.leg-right:before {
+  right: -20px;
+  background-color: #fbfdfa;
+  border-radius: 0 30px 0 0;
+  border-bottom: 10px solid #b0cfe4;
+}
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>Un Viaje Interactivo a Través del Tiempo</h1>
+    </header>
+
+    <!-- Introducción -->
+    <section class="section" id="intro">
+      <div
+        class="parallax-bg"
+        style="
+          background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Philipp_Jakob_Loutherbourg_d._J._002.jpg/1200px-Philipp_Jakob_Loutherbourg_d._J._002.jpg');
+          opacity: 0.3;
+        "
+      ></div>
+      <div class="text-container">
+        <h1 class="title">La Revolución Industrial</h1>
+        <p>
+          Un viaje en el tiempo a la era que cambió el mundo. La Revolución
+          Industrial fue un período de transformación sin precedentes, marcado
+          por la innovación tecnológica, el crecimiento económico y profundos
+          cambios sociales.
+        </p>
+      </div>
+    </section>
+
+    <!-- Inventos Clave -->
+    <section class="section" id="inventions">
+      <h2>Inventos Clave</h2>
+      <div class="text-container">
+        <p>
+          Descubre algunas de las máquinas e innovaciones que impulsaron esta
+          era de cambio.
+        </p>
+      </div>
+
+      <div class="machine-container">
+        <div class="machine" id="steam-engine">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5GTppPGv01cdykOd-YRrtrb34w10yYdKsiw&s"
+            alt="Máquina de Vapor"
+          />
+        </div>
+        <div class="machine" id="power-loom">
+          <img
+            src="https://i.pinimg.com/736x/2f/e2/7e/2fe27ef608b4a86425f5fee596d0bf5b.jpg"
+            alt="Telar Mecánico"
+          />
+        </div>
+
+        <div class="machine" id="locomotive">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/f/fe/Ambarawa_locomotief.jpg"
+            alt="Locomotora"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Impacto Social -->
+    <section class="section" id="impact">
+      <h2>Impacto Social</h2>
+      <div class="text-container">
+        <p>
+          La Revolución Industrial no solo trajo avances tecnológicos, sino
+          también una profunda transformación de la sociedad.
+        </p>
+      </div>
+
+      <div class="graph-container">
+        <div class="graph-bg"></div>
+        <div class="graph-bar" id="urban-growth">
+          <span class="graph-bar-label">Crecimiento Urbano</span>
+        </div>
+      </div>
+
+      <div class="text-container">
+        <p>
+          Las ciudades crecieron a un ritmo sin precedentes a medida que la
+          gente se trasladaba del campo en busca de trabajo en las fábricas.
+          Este rápido crecimiento urbano trajo consigo nuevos desafíos, como la
+          vivienda, el saneamiento y la pobreza.
+        </p>
+
+        <h3>Condiciones de Trabajo</h3>
+        <p>
+          Las condiciones de trabajo en las primeras fábricas eran a menudo
+          duras y peligrosas. Las largas jornadas laborales, los bajos salarios
+          y la falta de seguridad eran comunes. Esto llevó al surgimiento de
+          movimientos obreros que luchaban por mejores condiciones y derechos
+          laborales.
+        </p>
+      </div>
+    </section>
+
+    <!-- Mapa de Centros Industriales -->
+    <section class="section" id="map-section">
+      <h2>Centros Industriales</h2>
+      <div class="text-container">
+        <p>
+          Explora los principales centros industriales que surgieron durante la
+          Revolución Industrial.
+        </p>
+      </div>
+
+      <div id="map"></div>
+      <!--  Aquí se insertará el mapa -->
+    </section>
+
+    <!-- Figuras Clave -->
+    <section class="section" id="figures">
+      <h2>Figuras Clave</h2>
+      <div class="text-container">
+        <p>
+          Conoce a algunos de los inventores, empresarios y pensadores que
+          moldearon la Revolución Industrial.
+        </p>
+      </div>
+      <div id="figures-container">
+        <div class="figure-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRHQSKjWNWWzKdAQ7R9KG0tv2XZ3qz4P7-aA&s"
+            alt="James Watt"
+          />
+          <h3>James Watt</h3>
+          <p>Inventor de la máquina de vapor mejorada.</p>
+        </div>
+        <div class="figure-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSNI8HMZHmXRkeLQrSxhF8Vg3LguNZU9IH1NQ&s"
+            alt="Richard Arkwright"
+          />
+          <h3>Richard Arkwright</h3>
+          <p>Pionero del sistema de fábricas.</p>
+        </div>
+        <div class="figure-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQV_eb65RJTrEbWUZN3DFHi7D--B1mFg_oh0g&s"
+            alt="Adam Smith"
+          />
+          <h3>Adam Smith</h3>
+          <p>Economista y filósofo, autor de 'La Riqueza de las Naciones'.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- From Uiverse.io by JkHuger --> 
+<div class="box-of-star1">
+    <div class="star star-position1"></div>
+    <div class="star star-position2"></div>
+    <div class="star star-position3"></div>
+    <div class="star star-position4"></div>
+    <div class="star star-position5"></div>
+    <div class="star star-position6"></div>
+    <div class="star star-position7"></div>
+  </div>
+  <div class="box-of-star2">
+    <div class="star star-position1"></div>
+    <div class="star star-position2"></div>
+    <div class="star star-position3"></div>
+    <div class="star star-position4"></div>
+    <div class="star star-position5"></div>
+    <div class="star star-position6"></div>
+    <div class="star star-position7"></div>
+  </div>
+  <div class="box-of-star3">
+    <div class="star star-position1"></div>
+    <div class="star star-position2"></div>
+    <div class="star star-position3"></div>
+    <div class="star star-position4"></div>
+    <div class="star star-position5"></div>
+    <div class="star star-position6"></div>
+    <div class="star star-position7"></div>
+  </div>
+  <div class="box-of-star4">
+    <div class="star star-position1"></div>
+    <div class="star star-position2"></div>
+    <div class="star star-position3"></div>
+    <div class="star star-position4"></div>
+    <div class="star star-position5"></div>
+    <div class="star star-position6"></div>
+    <div class="star star-position7"></div>
+  </div>
+  <div data-js="astro" class="astronaut">
+    <div class="head"></div>
+    <div class="arm arm-left"></div>
+    <div class="arm arm-right"></div>
+    <div class="body">
+      <div class="panel"></div>
+    </div>
+    <div class="leg leg-left"></div>
+    <div class="leg leg-right"></div>
+    <div class="schoolbag"></div>
+  </div>
+
+
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script>
+    // --- Animación del Título (Máquina de Escribir) ---
+    const title = document.querySelector(".title");
+    const text = title.textContent;
+    title.textContent = ""; // Vaciar el título original
+    let i = 0;
+
+    function typeWriter() {
+        if (i < text.length) {
+            title.textContent += text.charAt(i);
+            i++;
+            setTimeout(typeWriter, 50); // Velocidad de escritura
+        } else {
+            // Animación de entrada del título principal (DESPUÉS de la máquina de escribir)
+            gsap.from(title, {
+                opacity: 0,
+                y: 50,       // Empieza un poco más abajo
+                duration: 1.5,
+                ease: "power2.out",
+                delay: 0.5   // Ligero retraso
+            });
+        }
+    }
+    typeWriter(); // Iniciar la animación
+
+
+    // --- GSAP y ScrollTrigger (Configuración) ---
+    gsap.registerPlugin(ScrollTrigger);
+
+     // --- Animación de los Títulos de Sección (h2) ---
+     gsap.utils.toArray('.section h2').forEach((title) => {
+        gsap.from(title, {
+          x: -100,  //  Dirección de entrada
+          opacity: 0,
+          duration: 1,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: title,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+            onEnter: () => title.classList.add('is-visible'), // Agrega la clase al entrar
+            onLeaveBack: () => title.classList.remove('is-visible') // Quita la clase al salir
+          }
+        });
+      });
+
+      // --- Animacion del subtitulo ---
+        gsap.utils.toArray('.text-container h3').forEach((subtitle) => {
+            gsap.from(subtitle, {
+            x: 100, //Direccion de entrada
+            opacity: 0,
+            duration: 1,
+            ease: "power2.out",
+            scrollTrigger:{
+                trigger: subtitle,
+                start: "top 80%",
+                toggleActions: "play none none reverse"
+            }
+            })
+        })
+
+
+    // --- Parallax para las Secciones ---
+    gsap.utils.toArray(".parallax-bg").forEach((bg) => {
+        gsap.to(bg, {
+        yPercent: 20, // Movimiento vertical del fondo
+        ease: "none",
+        scrollTrigger: {
+            trigger: bg.closest(".section"), // El trigger es la sección contenedora
+            scrub: true, // Animación suave al hacer scroll
+        },
+        });
+    });
+
+    // --- Animaciones de las Máquinas ---
+
+    // Máquina de Vapor, Telar, y Locomotora dentro de .machine-container
+    gsap.utils.toArray(".machine").forEach((machine, index) => {
+        let animation;
+
+        if (machine.id === "steam-engine") {
+        animation = {
+            x: 50,
+            repeat: -1,
+            yoyo: true,
+            duration: 3,
+            ease: "sine",
+        };
+        } else if (machine.id === "power-loom") {
+        animation = {
+            x: 50,
+            repeat: -1,
+            yoyo: true,
+            duration: 3,
+            ease: "sine",
+        };
+        } else if (machine.id === "locomotive") {
+        animation = {
+            x: "+=10",
+            y: "+=5",
+            repeat: -1,
+            yoyo: true,
+            duration: 3,
+            ease: "power1",
+        };
+        }
+
+        gsap.from(machine, {
+        opacity: 0,
+        ...animation,
+        scrollTrigger: {
+            trigger: "#inventions",
+            start: index === 0 ? "top 80%" : "top bottom",
+            toggleActions: "play none none reverse",
+        },
+        });
+    });
+
+    // --- Gráfica de Crecimiento Urbano ---
+    gsap.to("#urban-growth", {
+        width: "80%",
+        scrollTrigger: {
+        trigger: "#impact",
+        start: "top 70%",
+        end: "top 20%",
+        scrub: true,
+
+        },
+    });
+
+    // --- Inicializar el mapa ---
+    let map = L.map("map").setView([53.5, -2.5], 7);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    // --- Crear marcadores (hotspots) ---
+    let markers = [];
+
+    const manchester = L.marker([53.48, -2.24])
+        .addTo(map)
+        .bindPopup("Manchester:  El corazón de la industria textil.");
+    markers.push(manchester);
+
+    const liverpool = L.marker([53.4, -3.0])
+        .addTo(map)
+        .bindPopup("Liverpool:  Puerto clave.");
+    markers.push(liverpool);
+
+    const birmingham = L.marker([52.48, -1.89])
+        .addTo(map)
+        .bindPopup("Birmingham:  Centro de la industria metalúrgica.");
+    markers.push(birmingham);
+
+    const london = L.marker([51.5, -0.12])
+        .addTo(map)
+        .bindPopup("Londres:  Capital financiera.");
+    markers.push(london);
+
+    const glasgow = L.marker([55.86, -4.25])
+        .addTo(map)
+        .bindPopup("Glasgow: Centro de construcción naval.");
+    markers.push(glasgow);
+
+    // --- Animaciones con GSAP (ejemplo) ---
+    markers.forEach((marker, index) => {
+        gsap.from(marker._icon, {
+        scale: 0,
+        opacity: 0,
+        duration: 1,
+        delay: index * 0.2,
+        ease: "back.out(1.7)",
+        scrollTrigger: {
+            trigger: "#map-section",
+            start: "top 80%",
+        },
+        });
+    });
+
+      //Animacion al dar click al marcador
+    markers.forEach((marker) => {
+        marker.on("click", () => {
+        gsap.to(marker._icon, {
+            rotation: 360,
+            duration: 0.5,
+            ease: "power2.out",
+        });
+        });
+    });
+    </script>
+</body>
+</html>
